@@ -94,22 +94,24 @@ def launch_browser():
         time.sleep(2)
 
         # 로그인 정보 입력
-        username = driver.find_element(By.XPATH, '//*[@id="id"]')
-        username.click()
-        pyperclip.copy("jyy9961")
+        userId = userId_entry.get()
+        userId_field = driver.find_element(By.XPATH, '//*[@id="id"]')
+        userId_field.click()
+        pyperclip.copy(userId)
         pyautogui.keyDown("command")
         pyautogui.press("v")
         pyautogui.keyUp("command")
         time.sleep(2)
 
-        password = driver.find_element(By.XPATH, '//*[@id="pw"]')
-        password.click()
-        pyperclip.copy("yeeh01250412!@")
+        password = password_entry.get()
+        password_field = driver.find_element(By.XPATH, '//*[@id="pw"]')
+        password_field.click()
+        pyperclip.copy(password)
         pyautogui.keyDown("command")
         pyautogui.press("v")
         pyautogui.keyUp("command")
 
-        password.send_keys(Keys.RETURN)
+        password_field.send_keys(Keys.RETURN)
 
         write_button = driver.find_element(By.XPATH, '//*[@id="container"]/div/aside/div/div[1]/nav/a[2]')
         action = ActionChains(driver)
@@ -129,7 +131,7 @@ screen_width, screen_height = pyautogui.size()
 
 # 창 크기 설정 및 화면 우측에 위치
 window_width = 500   # 창의 너비
-window_height = 300  # 창의 높이
+window_height = 350  # 창의 높이
 x_position = screen_width - window_width           # 화면 우측에 창 위치
 y_position = (screen_height - window_height) // 2  # 화면 중앙 높이에 위치
 
@@ -138,6 +140,24 @@ root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
 
 # 키 입력 Listener는 Thread로 가동
 run_listener()
+
+userId_frame = tk.Frame(root)
+userId_label = tk.Label(userId_frame, text="ID : ")
+userId_label.pack(side=tk.LEFT, padx=4)
+userId_entry = tk.Entry(userId_frame, bd=2)
+userId_entry.pack(side=tk.LEFT, padx=10)
+userId_frame.pack(pady=5)
+
+password_frame = tk.Frame(root)
+password_label = tk.Label(password_frame, text="PW : ")
+password_label.pack(side=tk.LEFT)
+password_entry = tk.Entry(password_frame, show="*", bd=2)
+password_entry.pack(side=tk.LEFT, padx=10)
+password_frame.pack(pady=5)
+
+# 네이버 블로그 Open Button
+browser_button = tk.Button(root, text="브라우저 열기", command=launch_browser)
+browser_button.pack()
 
 # 사용법 가이드 Label
 info_label = tk.Label(root, 
@@ -161,10 +181,6 @@ position_label = tk.Label(root,
                           padx=20,
                           pady=10)
 position_label.pack(padx=10, pady=10)
-
-# 네이버 블로그 Open Button
-browser_button = tk.Button(root, text="브라우저 열기", command=launch_browser)
-browser_button.pack()
 
 def close_app():
     root.destroy()
