@@ -1,5 +1,3 @@
-import tkinter as tk
-from tkinter import messagebox
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -12,6 +10,8 @@ import time
 import ssl
 import os
 from threading import Thread
+import tkinter as tk
+from tkinter import messagebox
 
 # SSL 인증서 처리 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -26,32 +26,51 @@ def get_data_directory():
         os.makedirs(data_dir)
     return data_dir
 
+def show_message(message):
+    root.after(0, lambda: messagebox.showinfo("정보", message))
+
 # 커서 위치 좌표 저장 Def
 def save_coordinates(x, y, label):
     file_path = os.path.join(get_data_directory(), 'naver_coordinate.txt')
     with open(file_path, "a") as file:
         file.write(f"{label}: {x}, {y}\n")
-    messagebox.showinfo("Position Saved", f"Mouse position saved: ({x}, {y})")
+    if label == "existWrite":
+        show_message("이미 작성중인 글 버튼 좌표가 저장되었습니다.")
+    if label == "helpExit":
+        show_message("도움말 위치 좌표가 저장되었습니다.")
+    if label == "title":
+        show_message("제목 위치 좌표가 저장되었습니다.")
+    if label == "content":
+        show_message("내용 위치 좌표가 저장되었습니다.")
+    if label == "publish":
+        show_message("발행 버튼 위치 좌표가 저장되었습니다.")
+    if label == "realPublish":
+        show_message("최종 발행 버튼 위치 좌표가 저장되었습니다.")
+
 
 def on_press(key):
     try:
-        if key == keyboard.Key.f1:       # 도움말 닫기 위치
+        if key == keyboard.Key.f1:       # 이미 작성중인 글 버튼 위치
+            label = "existWrite"
+            x,y = pyautogui.position()
+            save_coordinates(x,y,label)
+        if key == keyboard.Key.f2:       # 도움말 닫기 위치
             label = "helpExit"
             x,y = pyautogui.position()
             save_coordinates(x,y,label)
-        if key == keyboard.Key.f2:       # 제목 입력창 위치
+        if key == keyboard.Key.f3:       # 제목 입력창 위치
             label = "title"
             x,y = pyautogui.position()
             save_coordinates(x,y,label)
-        if key == keyboard.Key.f3:       # 내용 입력창 위치
+        if key == keyboard.Key.f4:       # 내용 입력창 위치
             label = "content"
             x,y = pyautogui.position()
             save_coordinates(x,y,label)
-        if key == keyboard.Key.f4:       # 발행 버튼 위치
+        if key == keyboard.Key.f5:       # 발행 버튼 위치
             label = "publish"
             x,y = pyautogui.position()
             save_coordinates(x,y,label)
-        if key == keyboard.Key.f5:       # 최종 발행 버튼 위치
+        if key == keyboard.Key.f6:       # 최종 발행 버튼 위치
             label = "realPublish"
             x,y = pyautogui.position()
             save_coordinates(x,y,label)
@@ -113,6 +132,8 @@ def launch_browser():
 
         password_field.send_keys(Keys.RETURN)
 
+        time.sleep(3)
+
         write_button = driver.find_element(By.XPATH, '//*[@id="container"]/div/aside/div/div[1]/nav/a[2]')
         action = ActionChains(driver)
         action.move_to_element(write_button).click().perform()
@@ -165,6 +186,7 @@ info_label = tk.Label(root,
                       borderwidth=2,
                       relief="groove",
                       bg="white",
+                      fg="black",
                       anchor="w",
                       justify="left",
                       padx=20,
@@ -177,6 +199,7 @@ position_label = tk.Label(root,
                           borderwidth=2,
                           relief="groove",
                           bg="white",
+                          fg="black",
                           anchor="center",
                           padx=20,
                           pady=10)
