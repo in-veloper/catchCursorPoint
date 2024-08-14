@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFrame, QMessageBox
-from PyQt5.QtCore import Qt, QTimer, QThread
+from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
 import pyautogui
 import pyperclip
 import os
@@ -11,13 +11,22 @@ from selenium.webdriver.common.action_chains import ActionChains
 import time
 
 class KeyboardListenerThread(QThread):
+    key_pressed = pyqtSignal(object)
+
     def run(self):
-        start_listening()
+        def on_press(key):
+            self.key_pressed.emit(key)
+        
+        with keyboard.Listener(on_press=on_press) as listener:
+            listener.join()
 
 class MyWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.listener_thread = KeyboardListenerThread()
+        self.listener_thread.key_pressed.connect(self.handle_key_press)
+        self.listener_thread.start()
 
     def initUI(self):
         self.setWindowTitle("Catch Cursor Point")
@@ -77,6 +86,28 @@ class MyWindow(QWidget):
         self.setLayout(self.layout)
         self.update_mouse_position()
 
+    def handle_key_press(self, key):
+        try:
+            if key == keyboard.Key.f1:
+                label = "existWrite"
+            elif key == keyboard.Key.f2:
+                label = "helpExit"
+            elif key == keyboard.Key.f3:
+                label = "title"
+            elif key == keyboard.Key.f4:
+                label = "content"
+            elif key == keyboard.Key.f5:
+                label = "publish"
+            elif key == keyboard.Key.f6:
+                label = "realPublish"
+            else:
+                return
+
+            x, y = pyautogui.position()
+            self.save_coordinates(x, y, label)
+        except Exception as e:
+            print(f"Error: {e}")
+
     def launch_browser(self):
         driver = webdriver.Chrome()
         driver.get('https://section.blog.naver.com/BlogHome.naver?directoryNo=0&currentPage=1&groupId=0')
@@ -122,6 +153,12 @@ class MyWindow(QWidget):
     def close_app(self):
         self.close()
 
+    def save_coordinates(self, x, y, label):
+        file_path = os.path.join(get_data_directory(), 'naver_coordinate.txt')
+        with open(file_path, "a") as file:
+            file.write(f"{label}: {x}, {y}\n")
+        QMessageBox.information(self, "정보", f"{label} 위치 좌표가 저장되었습니다.")
+
 def get_data_directory():
     home_dir = os.path.expanduser('~')
     data_dir = os.path.join(home_dir, 'capdata')
@@ -129,60 +166,8 @@ def get_data_directory():
         os.makedirs(data_dir)
     return data_dir
 
-def save_coordinates(x, y, label):
-    file_path = os.path.join(get_data_directory(), 'naver_coordinate.txt')
-    with open(file_path, "a") as file:
-        file.write(f"{label}: {x}, {y}\n")
-    if label == "existWrite":
-        QMessageBox.information(None, "정보", "이미 작성중인 글 버튼 좌표가 저장되었습니다.")
-    if label == "helpExit":
-        QMessageBox.information(None, "정보", "도움말 위치 좌표가 저장되었습니다.")
-    if label == "title":
-        QMessageBox.information(None, "정보", "제목 위치 좌표가 저장되었습니다.")
-    if label == "content":
-        QMessageBox.information(None, "정보", "내용 위치 좌표가 저장되었습니다.")
-    if label == "publish":
-        QMessageBox.information(None, "정보", "발행 버튼 위치 좌표가 저장되었습니다.")
-    if label == "realPublish":
-        QMessageBox.information(None, "정보", "최종 발행 버튼 위치 좌표가 저장되었습니다.")
-
-def on_press(key):
-    try:
-        if key == keyboard.Key.f1:
-            label = "existWrite"
-            x, y = pyautogui.position()
-            save_coordinates(x, y, label)
-        if key == keyboard.Key.f2:
-            label = "helpExit"
-            x, y = pyautogui.position()
-            save_coordinates(x, y, label)
-        if key == keyboard.Key.f3:
-            label = "title"
-            x, y = pyautogui.position()
-            save_coordinates(x, y, label)
-        if key == keyboard.Key.f4:
-            label = "content"
-            x, y = pyautogui.position()
-            save_coordinates(x, y, label)
-        if key == keyboard.Key.f5:
-            label = "publish"
-            x, y = pyautogui.position()
-            save_coordinates(x, y, label)
-        if key == keyboard.Key.f6:
-            label = "realPublish"
-            x, y = pyautogui.position()
-            save_coordinates(x, y, label)
-    except Exception as e:
-        print(f"Error: {e}")
-
-def start_listening():
-    with keyboard.Listener(on_press=on_press) as listener:
-        listener.join()
-
 if __name__ == '__main__':
     app = QApplication([])
-    listener_thread = KeyboardListenerThread()
-    listener_thread.start()
     window = MyWindow()
     window.show()
     app.exec_()
